@@ -1,12 +1,12 @@
 
 <suite name="Suite" parallel="methods" thread-count="2">
     <listeners>
-        <listener class-name="utils.AllureListener"/>
-        <listener class-name="listeners.TestListener"/>
+        <listener class-name="testHelper.TestListeners"/>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
     </listeners>
     <test name="Tests">
         <classes>
-            <class name="tests.LoginTest"/>
+            <class name="tests.LoginTests"/>
         </classes>
     </test>
 </suite>
