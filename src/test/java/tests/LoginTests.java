@@ -55,6 +55,17 @@ public class LoginTests extends BaseTest {
         };
     }
 
+    @DataProvider(name = "xssPayloads")
+    public Object[][] xssPayloads() {
+        return new Object[][]{
+                {"<script>alert('XSS')</script>"},
+                {"<img src=x onerror=alert(1)>"},
+                {"\"><svg/onload=alert(1)>"},
+                {"'><svg><script>alert(1)</script></svg>"},
+                {"<body onload=alert(1)>"}
+        };
+    }
+
     private void verifyLoginOutcome(String user, String pass, boolean shouldSucceed) {
         loginPage.login(user, pass);
         if (shouldSucceed) {
@@ -113,16 +124,18 @@ public class LoginTests extends BaseTest {
     }
 
     @Description("XSS Injection Tests")
-    @Test(testName = "xssInjectionTest")
-    public void xssInjectionTest() {
-        String payload = "<script>alert('XSS')</script>";
-
+    @Test(dataProvider = "xssPayloads", testName = "xssInjectionTest")
+    public void xssInjectionTest(String payload) {
         loginPage.login(payload, "test");
-
         String pageSource = driver.getPageSource();
+        Assert.assertFalse(pageSource.contains(payload), "XSS payload rendered in page source: " + payload);
 
-        Assert.assertFalse(pageSource.contains(payload),
-                "XSS payload not sanitized");
+        String err = loginPage.getErrorMessage();
+        if (err != null) {
+            String lower = err.toLowerCase();
+            Assert.assertFalse(lower.contains("script") || lower.contains(payload.toLowerCase()),
+                    "Error message must not echo raw XSS payload or script tags");
+        }
     }
 
     @Description("Login with Special Character Tests")
