@@ -70,6 +70,29 @@ public class LoginTests extends BaseTest {
         verifyLoginOutcome(user, password, shouldSucceed);
     }
 
+    @Description("Invalid credential but not triggering security error message")
+    @Test(dataProvider = "loginData", testName = "invalidCredentialsWithoutSecurityChallenge")
+    public void invalidCredentialsWithoutSecurityChallenge(String user, String password, boolean shouldSucceed) {
+        verifyLoginOutcome(user, password, shouldSucceed);
+        String msg = loginPage.getErrorMessage();
+        Assert.assertNotNull(msg, "Error message should be present");
+        Assert.assertFalse(msg.trim().isEmpty(), "Error message should not be empty");
+
+        // Ensure message is generic/user-friendly
+        String lower = msg.toLowerCase();
+        Assert.assertTrue(lower.contains("invalid") || lower.contains("incorrect") || lower.contains("failed"),
+                "Error message should be generic and user-friendly");
+
+        // Forbidden substrings that would reveal internal/security details
+        String[] forbidden = new String[]{
+                "stacktrace", "exception", "java.lang", "sql", "jdbc",
+                "password", "token", "session", "trace", "at "
+        };
+        for (String f : forbidden) {
+            Assert.assertFalse(lower.contains(f), "Error message must not reveal internal info: " + f);
+        }
+    }
+
     @Description("CAPTCHA/MFA/Bot-detection challenge path")
     @Test(dataProvider = "securityChallengeData", testName = "securityChallengesDataDriven")
     public void securityChallenges(String user, String password, String challengeType) {

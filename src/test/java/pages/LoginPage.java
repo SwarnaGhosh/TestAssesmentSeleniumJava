@@ -62,6 +62,10 @@ public class LoginPage {
         return errorMsg.isDisplayed();
     }
 
+    public String getErrorMessage() {
+        return errorMsg.getText();
+    }
+
     public void logOut() {
         logOut.click();
     }
